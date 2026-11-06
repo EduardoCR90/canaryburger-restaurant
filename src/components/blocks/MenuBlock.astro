@@ -1,0 +1,11 @@
+---
+import MenuSection from '../MenuSection.astro';
+import {getMenu} from '../../lib/pages';
+import type {Content} from '../../types/content';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'menuSection'>; content:Content; index:number;}
+const {block,content,index} = Astro.props;
+const menu=getMenu(content,block.categoryIds,block.dishIds);
+if(block.featuredOnly){menu.dishes=menu.dishes.filter(d=>d.featured&&d.available);menu.categories=menu.categories.filter(c=>menu.dishes.some(d=>d.categoryId===c._id));}
+---
+<section class:list={['dynamic-block',`variant-${block.variant}`]}>{block.title && <h2 class="wrap">{block.title}</h2>}<MenuSection variant={block.variant} settings={content.settings} {...menu} prefix={`block-${index}-`}/></section>

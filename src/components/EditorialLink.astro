@@ -1,0 +1,8 @@
+---
+import {pathFor} from '../lib/paths';
+import {visibleEditorialLink} from '../lib/editorial';
+import type {Content} from '../types/content';
+interface Props {content:Content;link:{label:string;href:string}|null;}
+const {content,link}=Astro.props;
+---
+{link && visibleEditorialLink(content,link) && <a class="text-link" href={link.href.startsWith('/')?pathFor(link.href):link.href} data-astro-prefetch>{link.label} <span aria-hidden="true">↗</span></a>}

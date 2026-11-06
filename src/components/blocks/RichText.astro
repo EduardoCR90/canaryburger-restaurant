@@ -1,0 +1,11 @@
+---
+import type {RichContent} from '../../types/blocks';
+import {groupRichText} from '../../lib/rich-text';
+import RichParagraph from './RichParagraph.astro';
+interface Props {body:RichContent;}
+const {body} = Astro.props;
+---
+{groupRichText(body).map(group => {
+ const List=group.list;
+ return List ? <List>{group.items.map(paragraph=><RichParagraph paragraph={paragraph} inList/>)}</List> : <RichParagraph paragraph={group.items[0]}/>;
+})}

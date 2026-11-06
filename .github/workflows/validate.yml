@@ -1,0 +1,73 @@
+name: Validate Astro template or restaurant website
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-template:
+    if: github.repository == 'EduardoCR90/restaurant-astro-template'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SANITY_USE_MOCK: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:build
+      - name: Materialize and validate an isolated synthetic instance
+        run: npm run check:instance
+      - name: Independent build with a different URL and base
+        env:
+          SITE_URL: https://second-restaurant.example
+          SITE_BASE: /second-restaurant
+        run: npm run build && npm run check:build
+      - name: Visual preset checks with synthetic content
+        run: |
+          npm install --prefix "$RUNNER_TEMP/template-browser" playwright@1.56.1 --no-save --ignore-scripts --no-audit --no-fund
+          PLAYWRIGHT_MODULE="file://$RUNNER_TEMP/template-browser/node_modules/playwright/index.mjs" CHROME_BIN=/usr/bin/google-chrome node scripts/check-presets.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preset-visual-review
+          path: review/
+          retention-days: 7
+
+  restaurant-instance:
+    if: github.repository != 'EduardoCR90/restaurant-astro-template' && github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SANITY_USE_MOCK: "true"
+      SANITY_ALLOW_DEMO_FALLBACK: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run verify
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:build

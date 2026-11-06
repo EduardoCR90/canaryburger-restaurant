@@ -1,0 +1,6 @@
+---
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'divider'>;}
+const {block} = Astro.props;
+---
+<div class:list={['wrap','block-divider',`space-${block.spacing}`]} aria-hidden="true">{block.line && <hr/>}</div>

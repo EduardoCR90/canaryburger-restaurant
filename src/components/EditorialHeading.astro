@@ -1,0 +1,7 @@
+---
+import type {EditorialHeading} from '../types/editorial';
+interface Props {heading:EditorialHeading;}
+const {heading}=Astro.props;
+const lines=(value:string|null|undefined)=> (value||'').split('\n');
+---
+{lines(heading.before).map((line,i)=><Fragment>{i>0&&<br/>}{line}</Fragment>)}{heading.emphasis && <em>{lines(heading.emphasis).map((line,i)=><Fragment>{i>0&&<br/>}{line}</Fragment>)}</em>}{lines(heading.after).map((line,i)=><Fragment>{i>0&&<br/>}{line}</Fragment>)}

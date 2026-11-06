@@ -1,0 +1,23 @@
+---
+import {sectionEnabled} from '../lib/editorial';
+import {pageCopy} from '../lib/editorial';
+import EditorialHeading from './EditorialHeading.astro';
+import PageIntro from '../components/PageIntro.astro';
+import Photo from '../components/Photo.astro';
+import type { ContentResult } from '../types/content';
+interface Props {data:ContentResult;}
+const {data} = Astro.props;
+const { settings } = data.content;
+const page = data.content.pages.find(p => p.slug === 'reservas')!;
+const copy=pageCopy(page);
+const canReserve = data.source === 'sanity' && !settings.isFictional && settings.reservationUrl;
+---
+
+ <PageIntro {...page}/>
+ {sectionEnabled(page,'contact') && <section class="contact-layout wrap" aria-label="Reservas y datos de contacto"><div class="contact-photo">{page.image && <Photo image={page.image} eager/>}</div><div class="contact-details">
+ <div><p class="eyebrow">{copy.contact.eyebrow}</p><h2><EditorialHeading heading={copy.contact.heading}/></h2>{canReserve ? <a class="button" href={settings.reservationUrl!} target="_blank" rel="noopener noreferrer">{copy.contact.providerLabel} ↗</a> : <p class="reservation-status">{copy.contact.unavailable}</p>}</div>
+ <div><h3>{copy.contact.hoursTitle}</h3><dl class="hours">{settings.hours.map(hour => <div><dt>{hour.days}</dt><dd>{hour.time}</dd></div>)}</dl></div>
+ <div><h3>{copy.contact.addressTitle}</h3><address>{settings.address}<br/>{settings.isFictional ? <><span>{settings.email}</span><br/><span>{settings.phone}</span></> : <><a href={`mailto:${settings.email}`}>{settings.email}</a><br/><a href={`tel:${settings.phone.replace(/[^+0-9]/g,'')}`}>{settings.phone}</a></>}</address></div>
+ {settings.isFictional && <p class="contact-disclaimer">Dirección, teléfono, correo y horarios de ejemplo. Este restaurante es ficticio. No acudas a esta ubicación ni utilices estos datos para realizar reservas.</p>}
+ </div></section>}
+

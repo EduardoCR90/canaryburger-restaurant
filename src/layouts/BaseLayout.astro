@@ -1,0 +1,66 @@
+---
+import {siteCopy} from '../lib/editorial';
+import { ClientRouter, fade } from 'astro:transitions';
+import {getNavigation,getHomeHref} from '../lib/pages';
+import {themeVariables} from '../types/restaurant';
+import { pathFor } from '../lib/paths';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import type { ContentResult } from '../types/content';
+interface Props { data: ContentResult; slug: string; pageOverride?:ContentResult['content']['pages'][number]; }
+const { data, slug } = Astro.props;
+const { settings } = data.content;
+const page = Astro.props.pageOverride || data.content.pages.find(page => page.slug === slug)!;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const cmsSocialImage = data.source === 'sanity' ? page.seo.image || settings.socialImage : undefined;
+const fallback = data.presentation?.socialImage || {path:'/og-default.png',alt:'{name}',type:'image/png',width:1200,height:630};
+const socialImage = cmsSocialImage?.url || new URL(pathFor(fallback.path), Astro.site).href;
+const socialAlt = cmsSocialImage?.alt || fallback.alt.replaceAll('{name}',settings.name);
+const demo = data.source === 'demo' || settings.isFictional || canonical.hostname.endsWith('.example');
+---
+<!doctype html>
+<html lang="es" style={themeVariables(settings.theme)} data-theme={settings.theme.name} data-preset={settings.theme.preset} data-button={settings.theme.button} data-cards={settings.theme.cards} transition:animate="none">
+<head>
+ <!-- Codificación y viewport primero; metadatos esenciales antes de recursos y scripts. -->
+ <meta charset="UTF-8"/>
+ <meta name="viewport" content="width=device-width, initial-scale=1"/>
+ <title>{page.seo.title}</title>
+ <meta name="description" content={page.seo.description}/>
+ <link rel="canonical" href={canonical}/>
+ {(demo || page.noindex) && <meta name="robots" content="noindex, follow"/>}
+ <meta name="theme-color" content={settings.theme.paper}/>
+ <meta name="color-scheme" content="light"/>
+
+ <!-- Siempre presentes en el HTML estático para los crawlers de redes sociales. -->
+ <meta property="og:type" content="website"/>
+ <meta property="og:locale" content="es_ES"/>
+ <meta property="og:site_name" content={settings.name}/>
+ <meta property="og:title" content={page.seo.title}/>
+ <meta property="og:description" content={page.seo.description}/>
+ <meta property="og:url" content={canonical}/>
+ <meta property="og:image" content={socialImage}/>
+ <meta property="og:image:secure_url" content={socialImage}/>
+ <meta property="og:image:alt" content={socialAlt}/>
+ {!cmsSocialImage && <>
+  <meta property="og:image:type" content={fallback.type}/>
+  <meta property="og:image:width" content={String(fallback.width)}/>
+  <meta property="og:image:height" content={String(fallback.height)}/>
+ </>}
+ <meta name="twitter:card" content="summary_large_image"/>
+ <meta name="twitter:title" content={page.seo.title}/>
+ <meta name="twitter:description" content={page.seo.description}/>
+ <meta name="twitter:image" content={socialImage}/>
+ <meta name="twitter:image:alt" content={socialAlt}/>
+
+ <link rel="icon" href={pathFor(data.presentation?.favicon || '/favicon.svg')} type="image/svg+xml"/>
+ {(data.presentation?.imageOrigins || []).map(origin => <link rel="preconnect" href={origin}/>)}
+ {!demo && <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'Restaurant',name:settings.name,address:settings.address,telephone:settings.phone,url:new URL(pathFor('/'),Astro.site).href}).replaceAll('<','\\u003c')}/>}
+ <ClientRouter fallback="animate"/>
+</head><body id="top">
+ <a class="skip-link" href="#contenido">Saltar al contenido</a>
+ <Header variant={settings.theme.header} signature={siteCopy(settings).signature} name={settings.name} links={getNavigation(data.content)} logo={settings.logo} homeHref={getHomeHref(data.content)}/>
+ {data.source === 'demo' && <aside class="demo-notice">{data.warning || 'Proyecto de demostración · Restaurante y datos ficticios · Reservas no activas'}</aside>}
+ <main id="contenido" transition:name="page-content" transition:animate={fade({ duration: '300ms' })}><slot/></main>
+ <Footer content={data.content} homeHref={getHomeHref(data.content)}/>
+</body></html>

@@ -1,0 +1,7 @@
+---
+import RichText from './RichText.astro';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'richText'>;}
+const {block} = Astro.props;
+---
+<section class:list={['dynamic-block','wrap',`align-${block.alignment}`,`width-${block.width}`]}>{block.title && <h2>{block.title}</h2>}<div class="rich-content"><RichText body={block.body}/></div></section>

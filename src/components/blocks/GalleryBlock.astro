@@ -1,0 +1,7 @@
+---
+import Gallery from '../Gallery.astro';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'galleryBlock'>;}
+const {block} = Astro.props;
+---
+<section class:list={['dynamic-block','gallery','wrap',`variant-${block.variant}`]}>{block.title && <h2>{block.title}</h2>}<Gallery images={block.images} variant={block.variant}/></section>

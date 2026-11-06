@@ -1,0 +1,49 @@
+{
+  "name": "@restaurant-platform/astro-template",
+  "version": "0.4.2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "check": "astro check",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check:build": "node scripts/check-build.mjs",
+    "check:instance": "node scripts/check-materialized-instance.mjs"
+  },
+  "dependencies": {
+    "@sanity/client": "^7.11.0",
+    "astro": "^7.4.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/node": "^22.0.0",
+    "groq-js": "2.0.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "template.release.json"
+  ],
+  "exports": {
+    "./config": "./src/lib/config.ts",
+    "./content": "./src/lib/content.ts",
+    "./editorial": "./src/lib/editorial.ts",
+    "./lib/*": "./src/lib/*.ts",
+    "./types/*": "./src/types/*.ts",
+    "./components/*.astro": "./src/components/*.astro",
+    "./layouts/*.astro": "./src/layouts/*.astro",
+    "./styles/*": "./src/styles/*",
+    "./ops/evidence": "./src/ops/evidence.ts",
+    "./ops/report-deployment": "./src/ops/report-deployment.mjs",
+    "./platform": "./src/types/platform.ts"
+  }
+}

@@ -1,0 +1,13 @@
+---
+import type {RichContent} from '../../types/blocks';
+import {pathFor} from '../../lib/paths';
+interface Props {paragraph:RichContent[number];inList?:boolean;}
+const {paragraph,inList=false} = Astro.props;
+const Tag = inList ? 'li' : paragraph.style === 'normal' ? 'p' : paragraph.style;
+---
+<Tag>{paragraph.children.map(span => {
+ const link = paragraph.markDefs.find(def => span.marks.includes(def._key));
+ const Weight = span.marks.includes('strong') ? 'strong' : 'span';
+ const Emphasis = span.marks.includes('em') ? 'em' : 'span';
+ return link ? <a href={link.href.startsWith('/') ? pathFor(link.href) : link.href}><Weight><Emphasis>{span.text}</Emphasis></Weight></a> : <Weight><Emphasis>{span.text}</Emphasis></Weight>;
+})}</Tag>

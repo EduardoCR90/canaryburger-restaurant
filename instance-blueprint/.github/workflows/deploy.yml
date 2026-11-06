@@ -1,0 +1,102 @@
+name: Deploy restaurant website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository != 'EduardoCR90/restaurant-astro-template' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      deploy_required: ${{ steps.tracking.outputs.deploy_required }}
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      PUBLICATION_TRACKING: "true"
+      TEMPLATE_VERSION_TRACKING: "true"
+      ALLOW_EMPTY_PUBLICATION_EVIDENCE: "true"
+      SANITY_USE_MOCK: "false"
+      SANITY_ALLOW_DEMO_FALLBACK: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Report build started
+        continue-on-error: true
+        run: node scripts/report-deployment.mjs building
+      - name: Install, validate, build and upload with Astro
+        uses: withastro/action@v6
+        with:
+          node-version: 22
+          build-cmd: npm run verify && npm run check && npm test && npm run build && npm run check:build
+      - name: Record build result
+        id: tracking
+        if: always()
+        continue-on-error: true
+        env:
+          PHASE: ${{ job.status == 'success' && 'ready' || 'failed' }}
+        run: node scripts/report-deployment.mjs "$PHASE"
+      - name: Preserve revision evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-evidence
+          path: .publication-build.json
+          include-hidden-files: true
+          retention-days: 2
+          if-no-files-found: warn
+
+  deploy:
+    if: needs.build.outputs.deploy_required != 'false'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+  report:
+    if: always() && github.repository != 'EduardoCR90/restaurant-astro-template' && github.ref == 'refs/heads/main'
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: publication-evidence
+      - name: Confirm final deployment result
+        if: needs.build.outputs.deploy_required != 'false'
+        continue-on-error: true
+        env:
+          PHASE: ${{ needs.deploy.result == 'success' && 'succeeded' || 'failed' }}
+        run: node scripts/report-deployment.mjs "$PHASE"

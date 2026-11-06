@@ -1,0 +1,15 @@
+---
+import {resolveVariant} from '../types/visual';
+import {siteCopy} from '../lib/editorial';
+import EditorialLink from './EditorialLink.astro';
+import { pathFor } from '../lib/paths';
+import type { Content } from '../types/content';
+interface Props { content:Content; homeHref?:string; }
+const {content,homeHref} = Astro.props;
+const {settings}=content;
+const copy=siteCopy(settings).footer;
+---
+<footer data-variant={resolveVariant('footer',settings.theme.footer)} class="site-footer wrap">
+ <div class="footer-top"><a class="wordmark" href={homeHref ? pathFor(homeHref) : undefined} data-astro-prefetch>{settings.name}</a><p>{settings.tagline}<br/>{copy.line}</p><EditorialLink content={content} link={copy.link}/></div>
+ <div class="footer-bottom"><span>© {new Date().getFullYear()} {settings.name}</span><span>{settings.isFictional ? 'Restaurante ficticio · Proyecto de demostración' : settings.address}</span><a href="#top">{copy.backToTop} ↑</a></div>
+</footer>

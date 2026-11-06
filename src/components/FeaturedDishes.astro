@@ -1,0 +1,9 @@
+---
+import Photo from './Photo.astro';
+import {formatPrice} from '../lib/format';
+import {resolveVariant,type variantOptions} from '../types/visual';
+import type {Content} from '../types/content';
+interface Props{dishes:Content['dishes'];variant?:typeof variantOptions.featured[number];}
+const {dishes:featured,variant}=Astro.props;
+---
+ <div class="dish-editorial" data-variant={resolveVariant('featured',variant)}>{featured.map((dish,index) => <article><div class="dish-photo">{dish.image && <Photo image={dish.image} sizes="(max-width: 700px) 100vw, 33vw"/>}<span>0{index+1}</span></div><div class="dish-heading"><h3>{dish.name}</h3><span>{formatPrice(dish.price)}</span></div><p>{dish.description}</p></article>)}</div>

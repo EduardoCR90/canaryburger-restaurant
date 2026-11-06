@@ -1,0 +1,8 @@
+---
+import Photo from '../Photo.astro';
+import BlockLink from './BlockLink.astro';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'cards'>;}
+const {block} = Astro.props;
+---
+<section class:list={['dynamic-block','wrap',`variant-${block.variant}`]}>{block.title && <h2>{block.title}</h2>}<div class="block-cards">{block.items.map(item => <article>{item.image && <Photo image={item.image}/>}<h3>{item.title}</h3>{item.description && <p>{item.description}</p>}{item.link && <BlockLink link={item.link}/>}</article>)}</div></section>

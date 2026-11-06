@@ -1,0 +1,7 @@
+---
+import BlockLink from './BlockLink.astro';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'notice'>;}
+const {block} = Astro.props;
+---
+<aside class:list={['dynamic-block','wrap','block-notice',`align-${block.alignment}`]}>{block.title && <h2>{block.title}</h2>}<p>{block.text}</p>{block.cta && <BlockLink link={block.cta}/>}</aside>

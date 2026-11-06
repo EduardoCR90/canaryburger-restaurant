@@ -1,0 +1,9 @@
+---
+import Photo from './Photo.astro';
+import {resolveVariant,type variantOptions} from '../types/visual';
+import type {EditorialImage} from '../types/content';
+interface Props{images:EditorialImage[];variant?:typeof variantOptions.gallery[number];numbered?:boolean;}
+const {images,numbered=false}=Astro.props;
+const variant=resolveVariant('gallery',Astro.props.variant);
+---
+<div class="gallery-composition" data-variant={variant} tabindex={variant==='compact'?0:undefined} role={variant==='compact'?'region':undefined} aria-label={variant==='compact'?'Galería desplazable':undefined}>{images.map((image,index)=><figure><Photo image={image}/><figcaption>{numbered?`0${index+1} — ${image.alt}`:image.alt}</figcaption></figure>)}</div>

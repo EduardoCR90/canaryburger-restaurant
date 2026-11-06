@@ -1,0 +1,15 @@
+---
+import {sectionEnabled} from '../lib/editorial';
+import PageIntro from '../components/PageIntro.astro';
+import MenuSection from './MenuSection.astro';
+import {getMenu} from '../lib/pages';
+import type { ContentResult } from '../types/content';
+interface Props {data:ContentResult;}
+const {data} = Astro.props;
+const page = data.content.pages.find(p => p.slug === 'carta')!;
+---
+
+ <PageIntro {...page}/>
+ {sectionEnabled(page,'menu') && <MenuSection {...getMenu(data.content)} settings={data.content.settings}/>}
+
+

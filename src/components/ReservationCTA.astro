@@ -1,0 +1,11 @@
+---
+import {resolveVariant} from '../types/visual';
+import {siteCopy,visibleEditorialLink} from '../lib/editorial';
+import EditorialHeading from './EditorialHeading.astro';
+import EditorialLink from './EditorialLink.astro';
+import type {Content} from '../types/content';
+interface Props {content:Content;}
+const {content}=Astro.props;
+const copy=siteCopy(content.settings).reservation;
+---
+{visibleEditorialLink(content,copy.link) && <section class="reservation-band wrap" data-variant={resolveVariant('cta',content.settings.theme.cta)}><p class="eyebrow">{copy.eyebrow}</p><h2><EditorialHeading heading={copy.heading}/></h2><EditorialLink content={content} link={copy.link}/></section>}

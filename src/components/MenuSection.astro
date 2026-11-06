@@ -1,0 +1,19 @@
+---
+import Photo from './Photo.astro';
+import {resolveVariant,type variantOptions} from '../types/visual';
+import {siteCopy,originalDefaults} from '../lib/editorial';
+import {formatPrice} from '../lib/format';
+import type {Content} from '../types/content';
+interface Props {categories:Content['categories'];dishes:Content['dishes'];prefix?:string;settings?:Content['settings'];variant?:typeof variantOptions.menu[number];}
+const {categories,dishes,prefix='',settings} = Astro.props;
+const variant=resolveVariant('menu',Astro.props.variant,settings?.theme.menu);
+const copy=settings?siteCopy(settings).menu:originalDefaults.editorial.menu;
+---
+ <div class="menu-layout wrap" data-variant={variant}>
+ <nav class="menu-index" aria-label="Categorías de la carta">{categories.map((category,index) => <a href={`#${prefix}categoria-${category._id}`}><span>0{index+1}</span>{category.name}</a>)}</nav>
+ <div class="menu-content">{categories.map((category,index) => <section class="menu-section" id={`${prefix}categoria-${category._id}`}><p class="eyebrow">0{index+1} / {category.note}</p><h2>{category.name}</h2>
+ {dishes.filter(d => d.categoryId === category._id).map(dish => <article class:list={['menu-dish', { unavailable: !dish.available }]}>{variant==='grid' && dish.image && <Photo image={dish.image} sizes="(max-width:700px) 100vw, 40vw"/>}<div><h3>{dish.name}</h3><p>{dish.description}</p><small>{dish.allergens.length ? `Alérgenos: ${dish.allergens.join(', ')}` : copy.noAllergens}{!dish.available && ` · ${copy.unavailable}`}</small></div><span class="price">{formatPrice(dish.price)}</span></article>)}
+ {!dishes.some(d => d.categoryId === category._id) && <p class="empty-state">{copy.emptyCategory}</p>}
+ </section>)}
+ {categories.length === 0 && <p class="empty-state">{copy.emptyMenu}</p>}
+ <p class="menu-disclaimer">{copy.disclaimer}</p></div></div>

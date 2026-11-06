@@ -1,0 +1,101 @@
+name: Bootstrap restaurant instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Opaque provisioning request UUID
+        required: true
+        type: string
+      specification_b64:
+        description: Base64url public instance specification
+        required: true
+        type: string
+      specification_hash:
+        description: SHA-256 of the decoded specification
+        required: true
+        type: string
+
+permissions:
+  actions: write
+  contents: write
+  id-token: write
+
+concurrency:
+  group: bootstrap-${{ inputs.request_id }}
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.repository != 'EduardoCR90/restaurant-astro-template' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SANITY_USE_MOCK: "true"
+      SANITY_ALLOW_DEMO_FALLBACK: "true"
+      SPECIFICATION_B64: ${{ inputs.specification_b64 }}
+      SPECIFICATION_HASH: ${{ inputs.specification_hash }}
+      REQUEST_ID: ${{ inputs.request_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate dispatch identity and specification
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { createHash } from 'node:crypto';
+          import { writeFile } from 'node:fs/promises';
+          assert.match(process.env.REQUEST_ID, /^[a-f0-9-]{36}$/i);
+          assert.match(process.env.SPECIFICATION_HASH, /^[a-f0-9]{64}$/);
+          const value = Buffer.from(process.env.SPECIFICATION_B64, 'base64url');
+          assert.ok(value.length > 0 && value.length <= 60000);
+          assert.equal(createHash('sha256').update(value).digest('hex'), process.env.SPECIFICATION_HASH);
+          await writeFile(process.env.RUNNER_TEMP + '/instance-spec.json', value, { mode: 0o600 });
+          JS
+      - name: Materialize and validate the exact release
+        id: materialize
+        run: |
+          if test -f instance.manifest.json; then
+            node -e "const m=require('./instance.manifest.json'); if(m.request_id!==process.env.REQUEST_ID||m.specification_hash!==process.env.SPECIFICATION_HASH) process.exit(1)"
+            npm ci --ignore-scripts --no-audit --no-fund
+            npm run verify
+            source_commit="$(git log --diff-filter=A --format=%H -- instance.manifest.json | tail -n 1)"
+            test -n "$source_commit" && git merge-base --is-ancestor "$source_commit" HEAD
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            source_root="$GITHUB_WORKSPACE"
+            target="$RUNNER_TEMP/materialized-instance"
+            mkdir -p "$target"
+            node tools/materialize-instance.mjs "$target" "$source_root" "$RUNNER_TEMP/instance-spec.json" "$SPECIFICATION_HASH"
+            npm install --prefix "$target" --package-lock-only --ignore-scripts --no-audit --no-fund
+            npm ci --prefix "$target" --ignore-scripts --no-audit --no-fund
+            npm --prefix "$target" run verify
+            npm --prefix "$target" run check
+            npm --prefix "$target" test
+            npm --prefix "$target" run build
+            npm --prefix "$target" run check:build
+            find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+            cp -a "$target/." .
+            git add --all
+            git config user.name 'restaurant-platform[bot]'
+            git config user.email 'restaurant-platform[bot]@users.noreply.github.com'
+            git commit -m "Initialize restaurant website"
+            git push origin HEAD:main
+            source_commit="$(git rev-parse HEAD)"
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+          test "$source_commit" = "$(git rev-list -n 1 "$source_commit")"
+          echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
+      - name: Confirm source through GitHub OIDC
+        env:
+          INSTANCE_SOURCE_COMMIT: ${{ steps.materialize.outputs.source_commit }}
+        run: node scripts/report-provisioning.mjs
+      - name: Start the registered Pages workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/dispatches" -f ref=main

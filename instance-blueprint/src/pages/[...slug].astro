@@ -1,0 +1,17 @@
+---
+import { getContent } from "../lib/content";
+import { getPublishedPages } from "@restaurant-platform/astro-template/lib/pages";
+import RestaurantPage from "@restaurant-platform/astro-template/components/RestaurantPage.astro";
+
+export async function getStaticPaths() {
+  const data = await getContent();
+  return getPublishedPages(data.content).map((page) => ({
+    params: { slug: page.slug === "inicio" ? undefined : page.slug },
+    props: { data, page },
+  }));
+}
+
+const { data, page } = Astro.props;
+---
+
+<RestaurantPage data={data} page={page} />

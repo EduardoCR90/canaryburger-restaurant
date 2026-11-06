@@ -1,0 +1,8 @@
+---
+import Photo from '../Photo.astro';
+import BlockLink from './BlockLink.astro';
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'cta'>;}
+const {block} = Astro.props;
+---
+<section class:list={['dynamic-block','reservation-band','wrap',`align-${block.alignment}`,`variant-${block.variant}`]}><h2>{block.title}</h2>{block.description && <p>{block.description}</p>}{block.image && <Photo image={block.image}/>}<BlockLink link={block.cta}/></section>

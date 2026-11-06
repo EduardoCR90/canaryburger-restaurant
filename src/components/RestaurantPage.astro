@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HomePage from './HomePage.astro';
+import MenuPage from './MenuPage.astro';
+import StoryPage from './StoryPage.astro';
+import ContactPage from './ContactPage.astro';
+import BlockRenderer from './blocks/BlockRenderer.astro';
+import PageIntro from './PageIntro.astro';
+import type {ContentResult,Content} from '../types/content';
+interface Props {data:ContentResult;page:Content['pages'][number];}
+const {data,page}=Astro.props;
+const templates={inicio:HomePage,carta:MenuPage,restaurante:StoryPage,reservas:ContactPage};
+const Template=Object.hasOwn(templates,page.slug)?templates[page.slug as keyof typeof templates]:undefined;
+---
+<BaseLayout data={data} slug={page.slug}>
+{page.blocks?.length||!Template?<><PageIntro {...page}/><BlockRenderer blocks={page.blocks||[]} content={data.content}/></>:<Template data={data}/>}
+</BaseLayout>

@@ -1,0 +1,6 @@
+---
+import {pathFor} from '../../lib/paths';
+interface Props {link:{href:string;label:string};}
+const {link} = Astro.props;
+---
+<a class="text-link" href={link.href.startsWith('/') ? pathFor(link.href) : link.href}>{link.label} <span aria-hidden="true">↗</span></a>

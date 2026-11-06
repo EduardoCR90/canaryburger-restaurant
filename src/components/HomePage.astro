@@ -1,0 +1,32 @@
+---
+import {sectionEnabled} from '../lib/editorial';
+import FeaturedDishes from './FeaturedDishes.astro';
+import {pageCopy} from '../lib/editorial';
+import EditorialHeading from './EditorialHeading.astro';
+import EditorialLink from './EditorialLink.astro';
+import Photo from '../components/Photo.astro';
+import ReservationCTA from '../components/ReservationCTA.astro';
+import type { ContentResult } from '../types/content';
+interface Props {data:ContentResult;}
+const {data} = Astro.props;
+const { settings, story, dishes } = data.content;
+const page = data.content.pages.find(p => p.slug === 'inicio')!;
+const copy=pageCopy(page);
+const featured = dishes.filter(d => d.featured && d.available && d.visible && data.content.categories.some(c => c._id === d.categoryId && c.visible)).slice(0,3);
+---
+
+ {!sectionEnabled(page,'hero') && <h1 class="sr-only">{page.title}</h1>}
+ {sectionEnabled(page,'hero') && <section class="hero wrap" data-variant={settings.theme.hero}>
+  <div class="hero-heading"><p class="eyebrow">{page.eyebrow}</p><h1 class="preserve-lines">{page.title}</h1></div>
+  <div class="hero-photo">{page.image && <Photo image={page.image} eager sizes="(max-width: 700px) 100vw, 72vw"/>}<span class="photo-caption">{copy.hero.caption}</span></div>
+  <div class="hero-note"><span class="coordinate" aria-hidden="true">{copy.hero.coordinates.split('\n').map((line,i)=><Fragment>{i>0&&<br/>}{line}</Fragment>)}</span><p>{page.intro}</p><EditorialLink content={data.content} link={copy.hero.link}/></div>
+  <span class="hero-side" aria-hidden="true">{copy.hero.sideNote}</span>
+ </section>}
+ {sectionEnabled(page,'essence') && <section class="concept wrap"><p class="eyebrow">{copy.essence.eyebrow}</p><div><h2><EditorialHeading heading={copy.essence.heading}/></h2><p class="body-copy">{settings.concept}</p><EditorialLink content={data.content} link={copy.essence.link}/></div></section>}
+ {sectionEnabled(page,'featured') && <section class="featured wrap"><div class="section-heading"><p class="eyebrow">{copy.featured.eyebrow}</p><h2><EditorialHeading heading={copy.featured.heading}/></h2><EditorialLink content={data.content} link={copy.featured.link}/></div>
+ <FeaturedDishes dishes={featured} variant={settings.theme.featured}/>
+ {featured.length === 0 && <p class="empty-state">{copy.featured.empty}</p>}
+ </section>}
+ {sectionEnabled(page,'storyPreview') && <section class="story-preview"><div class="story-image">{story.image && <Photo image={story.image}/>}</div><div class="story-copy"><p class="eyebrow">{copy.storyPreview.eyebrow}</p><h2 class="preserve-lines">{story.title}</h2><p>{story.body}</p><EditorialLink content={data.content} link={copy.storyPreview.link}/></div></section>}
+ {sectionEnabled(page,'reservation') && <ReservationCTA content={data.content}/>}
+

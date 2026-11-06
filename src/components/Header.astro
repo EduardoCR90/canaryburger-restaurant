@@ -1,0 +1,12 @@
+---
+import {resolveVariant,type variantOptions} from '../types/visual';
+import { pathFor } from '../lib/paths';
+import type {EditorialImage} from '../types/content';
+interface Props { variant?:typeof variantOptions.header[number]; name: string; links:{href:string;label:string}[]; logo?:EditorialImage|null; homeHref?:string; signature:string; }
+const { name, links:items, logo, homeHref,signature } = Astro.props;
+const links = items.map(link => ({...link,href:pathFor(link.href)}));
+---
+<header data-variant={resolveVariant('header',Astro.props.variant)} class="site-header wrap" transition:name="site-header" transition:animate="none">
+ <a href={homeHref ? pathFor(homeHref) : undefined} class="wordmark" aria-label={`${name} · Inicio`}>{logo ? <img src={logo.url} alt={logo.alt} width="160" height="64"/> : name}<span>{signature}</span></a>
+ <nav aria-label="Navegación principal">{links.map(link => <a href={link.href} data-astro-prefetch aria-current={Astro.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>)}</nav>
+</header>

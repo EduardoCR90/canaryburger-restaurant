@@ -1,0 +1,12 @@
+---
+import {resolveBlocks} from '../../lib/blocks';
+import {blockRegistry} from './registry';
+import type {Content} from '../../types/content';
+interface Props {blocks:unknown[];content:Content;}
+const {blocks,content} = Astro.props;
+const resolved = resolveBlocks(blocks);
+---
+{resolved.map((block,index) => {
+ const Component = blockRegistry[block._type];
+ return <Component block={block as never} content={content} index={index}/>;
+})}

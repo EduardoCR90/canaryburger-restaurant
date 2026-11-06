@@ -1,0 +1,6 @@
+---
+import type {BlockOf} from '../../types/blocks';
+interface Props {block:BlockOf<'faq'>;}
+const {block} = Astro.props;
+---
+<section class="dynamic-block wrap block-faq">{block.title && <h2>{block.title}</h2>}{block.items.map(item => <details><summary>{item.question}</summary><p class="preserve-lines">{item.answer}</p></details>)}</section>
