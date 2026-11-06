@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "restaurant": {
+    "name": "CanaryBurger",
+    "slug": "canaryburger"
+  },
+  "modules": [
+    {
+      "key": "content_management",
+      "granted": true,
+      "enabled": true
+    },
+    {
+      "key": "reservations",
+      "granted": false,
+      "enabled": false
+    },
+    {
+      "key": "staff_scheduling",
+      "granted": false,
+      "enabled": false
+    },
+    {
+      "key": "qr_menu",
+      "granted": false,
+      "enabled": false
+    },
+    {
+      "key": "events",
+      "granted": false,
+      "enabled": false
+    },
+    {
+      "key": "analytics",
+      "granted": false,
+      "enabled": false
+    }
+  ]
+}
